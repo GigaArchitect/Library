@@ -37,8 +37,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "library_api"
+    "drf_yasg",
+    "knox",
+    "library_api",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.BasicAuthentication",
+        "knox.auth.TokenAuthentication",
+    ),
+}
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -76,11 +86,12 @@ WSGI_APPLICATION = "library.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "OPTIONS": {
-            "service": "my_service",
-            "passfile": "mypassword"
-        }
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "library_api",
+        "USER": "root",
+        "PASSWORD": "BATMAN",
+        "HOST": "localhost",
+        "PORT": "3306",
     }
 }
 
@@ -101,6 +112,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 
@@ -125,3 +140,8 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGOUT_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "home"
+
+AUTH_USER_MODEL = "library_api.User"
