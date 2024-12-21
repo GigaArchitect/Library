@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import PatronProfile, User, category
+from .models import PatronProfile, User, category, book
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,7 +17,6 @@ class UserSerializer(serializers.ModelSerializer):
         # password and password2 are incjected fields and they are not stored in db
         fields = ["first_name", "last_name", "email", "role", "password", "password2"]
 
-    # overriden from the default ModelSerializer
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError("Passwords not the same")
@@ -62,3 +61,8 @@ class PatronProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = book
+        fields = "__all__"

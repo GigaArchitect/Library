@@ -1,7 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 
@@ -75,10 +75,12 @@ class AuthorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
 
-@receiver(post_save, sender=Author)
+@receiver([post_save, pre_delete], sender=Author)
 def create_author_profile(sender, instance, created, **kwargs):
     if created and instance.role == User.Role.AUTHOR:
         AuthorProfile.objects.create(user=instance)
+    else:
+        AuthorProfile.objects.get(user=instance).delete
 
 
 class Patron(User):
@@ -93,10 +95,12 @@ class PatronProfile(models.Model):
     favourite_category = models.ManyToManyField(category)
 
 
-@receiver(post_save, sender=Patron)
+@receiver([post_save, pre_delete], sender=Patron)
 def create_patron_profile(sender, instance, created, **kwargs):
     if created and instance.role == User.Role.PATRON:
         PatronProfile.objects.create(user=instance)
+    else:
+        PatronProfile.objects.get(user=instance).delete()
 
 
 class book(models.Model):
