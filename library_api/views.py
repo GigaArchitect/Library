@@ -13,7 +13,7 @@ from .forms import *
 from .mixins import *
 from .models import *
 from .permissions import IsAuthor
-from .serializers import BookSerializer, UserSerializer
+from .serializers import BookSerializer, CategorySerializer, UserSerializer
 
 
 class SignUpView(CreateAPIView):
@@ -107,7 +107,7 @@ class DeleteUser(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
+######## Books #########################################################
 class ListBook(ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = book.objects.all()
@@ -126,3 +126,23 @@ class DeleteBook(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = book.objects.all()
     serializer_class = BookSerializer
+
+###### Categories ######################################################
+class ListCategory(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = category.objects.all()
+    serializer_class = CategorySerializer
+
+class CreateCategory(CreateAPIView):
+    permission_classes = [IsAuthenticated, IsAuthor]
+    serializer_class = CategorySerializer
+
+class UpdateCategory(UpdateAPIView):
+    permission_classes = [IsAuthenticated, IsAuthor]
+    queryset = category.objects.all()
+    serializer_class = CategorySerializer
+
+class DeleteCategory(DestroyAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = category.objects.all()
+    serializer_class = CategorySerializer
