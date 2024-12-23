@@ -1,7 +1,7 @@
-# Library API
+# Library API 🚀
 Using Django and Django Rest Framework, I developed this library_api app
 
-## What I learned ?
+## What I learned ? 📝
 * Django and Djangos ORM
 * Django Rest Framework
 * Django URLs
@@ -11,13 +11,13 @@ Using Django and Django Rest Framework, I developed this library_api app
 * Some Opinionated Architecture Decision
 * Django User-Model and How to Make Custom One
 
-## Docker Image
+## Docker Image 🐳
 Image is Hosted on dockerhub @ consumedking/library_api
 ```
 (sh) docker container run consumedking/library_api
 ```
 
-## CLI Setup
+## CLI Setup 🛬
 ### Installation
 ```
 git clone <link-here> library_api
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 (.venv) python3 manage.py runserver
 ```
 
-## Models
+## Models 📇
 * User-Model
     * PATRON
     * AUTHOR
