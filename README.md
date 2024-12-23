@@ -12,7 +12,6 @@ Using Django and Django Rest Framework, I developed this library_api app
 * Django User-Model and How to Make Custom One
 
 ## Docker Image
-You can use the docker Image  
 Image is Hosted on dockerhub @ consumedking/library_api
 ```
 (sh) docker container run consumedking/library_api
