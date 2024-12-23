@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import PatronProfile, User, category, book
+from .models import PatronProfile, User, Category, Book
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -33,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = category
+        model = Category
         fields = "__all__"
 
 
@@ -50,7 +50,7 @@ class PatronProfileSerializer(serializers.ModelSerializer):
         if favourite_category is not None:
             instance.favourite_category.clear()
             categories = [
-                category.objects.get_or_create(**cat_data)[0]
+                Category.objects.get_or_create(**cat_data)[0]
                 for cat_data in favourite_category
             ]
             instance.favourite_category.set(categories)
@@ -64,5 +64,5 @@ class PatronProfileSerializer(serializers.ModelSerializer):
 
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
-        model = book
+        model = Book
         fields = "__all__"

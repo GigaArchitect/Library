@@ -1,11 +1,11 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 
-class category(models.Model):
+class Category(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     name = models.CharField(max_length=25)
 
@@ -92,7 +92,7 @@ class Patron(User):
 
 class PatronProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    favourite_category = models.ManyToManyField(category)
+    favourite_category = models.ManyToManyField(Category)
 
 
 @receiver([post_save, pre_delete], sender=Patron)
@@ -103,10 +103,11 @@ def create_patron_profile(sender, instance, created, **kwargs):
         PatronProfile.objects.get(user=instance).delete()
 
 
-class book(models.Model):
+class Book(models.Model):
     authors = models.ManyToManyField(AuthorProfile)
     isbn = models.CharField(max_length=150, primary_key=True, unique=True)
     name = models.CharField(max_length=75)
     year_published = models.DateField()
-    category = models.ManyToManyField(category)
+    category = models.ManyToManyField(Category)
     stock_copies = models.IntegerField()
+    borrowed_by = models.ManyToManyField(PatronProfile, related_name="borrowed_books")

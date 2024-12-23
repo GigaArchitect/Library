@@ -110,7 +110,7 @@ class DeleteUser(APIView):
 ######## Books #########################################################
 class ListBook(ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = book.objects.all()
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
 
 class CreateBook(CreateAPIView):
@@ -119,30 +119,60 @@ class CreateBook(CreateAPIView):
 
 class UpdateBook(UpdateAPIView):
     permission_classes = [IsAuthenticated, IsAuthor]
-    queryset = book.objects.all()
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
 
 class DeleteBook(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = book.objects.all()
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
 
 ###### Categories ######################################################
 class ListCategory(ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = category.objects.all()
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 class CreateCategory(CreateAPIView):
-    permission_classes = [IsAuthenticated, IsAuthor]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = CategorySerializer
 
 class UpdateCategory(UpdateAPIView):
-    permission_classes = [IsAuthenticated, IsAuthor]
-    queryset = category.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 class DeleteCategory(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = category.objects.all()
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def BorrowBook(request, pk):
+
+    try:
+        to_borrow = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return Response("Book Not Found !", status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        profile = PatronProfile.objects.get(user=request.user)
+    except PatronProfile.DoesNotExist:
+        return Response("Something Is Wrong With Your Profile, Contact The Admin !", status=status.HTTP_404_NOT_FOUND)
+
+    if to_borrow.borrowed_by.filter(user=request.user).exists() :
+        return Response("You Already Borrowed This Book !", status=status.HTTP_400_BAD_REQUEST)
+
+    if to_borrow.stock_copies <= 0:
+        return Response("Not Enough Copies Exist !", status=status.HTTP_400_BAD_REQUEST)
+
+    to_borrow.stock_copies -= 1
+    to_borrow.borrowed_by.add(profile)
+    to_borrow.save()
+
+    return Response("Added to your List !", status=status.HTTP_200_OK)
+
+
+    
