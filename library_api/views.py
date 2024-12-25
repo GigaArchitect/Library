@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from knox.views import IsAuthenticated
@@ -148,6 +149,7 @@ class DeleteCategory(DestroyAPIView):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def BorrowBook(request, pk):
 
     try:
@@ -175,6 +177,7 @@ def BorrowBook(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def ReturnBook(request, pk):
 
     try:
