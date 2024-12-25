@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from knox.views import IsAuthenticated
@@ -149,7 +149,6 @@ class DeleteCategory(DestroyAPIView):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@transaction.atomic
 def BorrowBook(request, pk):
 
     try:
@@ -168,16 +167,18 @@ def BorrowBook(request, pk):
     if to_borrow.stock_copies <= 0:
         return Response("Not Enough Copies Exist !", status=status.HTTP_400_BAD_REQUEST)
 
-    to_borrow.stock_copies -= 1
-    to_borrow.borrowed_by.add(profile)
-    to_borrow.save()
-
-    return Response("Added to your List !", status=status.HTTP_200_OK)
+    try:
+        with transaction.atomic():
+            to_borrow.stock_copies -= 1
+            to_borrow.borrowed_by.add(profile)
+            to_borrow.save()
+        return Response("Added to your List !", status=status.HTTP_200_OK)
+    except DatabaseError:
+        return Response("Internal Database Error!", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@transaction.atomic
 def ReturnBook(request, pk):
 
     try:
@@ -193,8 +194,12 @@ def ReturnBook(request, pk):
     if not to_return.borrowed_by.filter(user=request.user).exists():
         return Response("You Don't Own a Copy Of This Book", status=status.HTTP_400_BAD_REQUEST)
 
-    to_return.stock_copies += 1
-    to_return.borrowed_by.remove(profile)
-    to_return.save()
+    try :
+        with transaction.atomic():
+            to_return.stock_copies += 1
+            to_return.borrowed_by.remove(profile)
+            to_return.save()
 
-    return Response("Removed from your List !", status=status.HTTP_200_OK)
+        return Response("Removed from your List !", status=status.HTTP_200_OK)
+    except DatabaseError:
+        return Response("Internal Database Error!", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
