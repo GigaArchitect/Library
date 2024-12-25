@@ -38,6 +38,7 @@ urlpatterns = [
     path("books/<int:pk>/update", UpdateBook.as_view(), name="update-book"),
     path("books/<int:pk>/delete", DeleteBook.as_view(), name="delete-book"),
     path("books/<int:pk>/borrow", BorrowBook, name="borrow-book"),
+    path("book/<int:pk>/return", ReturnBook, name="return-book"),
 
     path("categories", ListCategory.as_view(), name="list-category"),
     path("categories/create", CreateCategory.as_view(), name="create-category"),

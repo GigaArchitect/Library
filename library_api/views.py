@@ -43,9 +43,6 @@ def ListUsers(request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         data = serializer.data
-        # for user in data:
-        #     user.pop("password", None)
-        #     user.pop("password2", None)
         return Response(data, status=status.HTTP_200_OK)
 
 
@@ -57,12 +54,13 @@ def GetUser(request, id):
             user = User.objects.get(pk=id)
             serializer = UserSerializer(user)
             return Response(serializer.data)
-        except:
-            return Response("User Not Found")
+        except User.DoesNotExist:
+            return Response("User Not Found", status=status.HTTP_404_NOT_FOUND)
 
 
 class UpdateUser(APIView):
     permission_classes = [IsAuthenticated]
+    ALLOWED_FIELDS = ["first_name", "last_name", "email"]
 
     def put(self, request: Request, id):
         try:
@@ -71,12 +69,12 @@ class UpdateUser(APIView):
             return Response("User Not Found", status=status.HTTP_404_NOT_FOUND)
         if request.user == user:
             try:
+                password = request.data.pop("password", None)
+                if password:
+                    user.set_password(password)
                 for field, value in request.data.items():
-                    if hasattr(user, field) and field != "password":
+                    if field in self.ALLOWED_FIELDS and hasattr(user, field):
                         setattr(user, field, value)
-                    password = request.data.get("password")
-                    if password:
-                        user.set_password(password)
                 user.save()
                 return Response("Updated Successfully", status=status.HTTP_200_OK)
             except:
@@ -175,4 +173,25 @@ def BorrowBook(request, pk):
     return Response("Added to your List !", status=status.HTTP_200_OK)
 
 
-    
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ReturnBook(request, pk):
+
+    try:
+        to_return = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return Response("Book Doesn't Exist On Database, Please Return Manually !", status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        profile = PatronProfile.objects.get(user=request.user)
+    except PatronProfile.DoesNotExist:
+        return Response("Something Is Wrong With Your Profile, Contact The Admin !", status=status.HTTP_404_NOT_FOUND)
+
+    if not to_return.borrowed_by.filter(user=request.user).exists():
+        return Response("You Don't Own a Copy Of This Book", status=status.HTTP_400_BAD_REQUEST)
+
+    to_return.stock_copies += 1
+    to_return.borrowed_by.remove(profile)
+    to_return.save()
+
+    return Response("Removed from your List !", status=status.HTTP_200_OK)
