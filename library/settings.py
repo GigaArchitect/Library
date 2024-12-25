@@ -47,6 +47,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "knox.auth.TokenAuthentication",
     ),
+    "DEFAULT_THROTTLE_RATES": {"user": "10/minute"},
 }
 
 

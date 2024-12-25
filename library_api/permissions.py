@@ -1,7 +1,6 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.request import Request
 
 class IsAuthor(BasePermission):
-    def has_permission(self, request, view):
-        if request.user.role == "AUTHOR":
-            return True
-        return False
+    def has_permission(self, request: Request, view):
+        return request.user.role == "AUTHOR"
