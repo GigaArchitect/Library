@@ -1,1 +1,5 @@
 mypassword
+*/__pycache__/*
+pyvenv.cfg
+.vscode
+.env
