@@ -2,6 +2,7 @@ from django.db import DatabaseError, transaction
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from knox.views import IsAuthenticated
+from knox.models import AuthToken
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
@@ -125,6 +126,12 @@ class DeleteBook(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+
+    def perform_destroy(self, instance):
+        request = self.request
+        if request.user not in instance.authors.all():
+            raise PermissionError("Authors Can Only Delete Their Own Books !")
+        return super().perform_destroy(instance)
 
 ###### Categories ######################################################
 class ListCategory(ListAPIView):
