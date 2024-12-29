@@ -123,7 +123,7 @@ class UpdateBook(UpdateAPIView):
     serializer_class = BookSerializer
 
 class DeleteBook(DestroyAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAuthor]
     queryset = Book.objects.all()
     serializer_class = BookSerializer
 
