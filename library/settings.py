@@ -14,6 +14,8 @@ from os import getenv
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(override=True)
+print("DB_NAME =", getenv("DB_NAME"))
+print("DB_HOST =", getenv("DB_HOST"))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "drf_yasg",
     "knox",
     "library_api",
@@ -49,13 +52,16 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "knox.auth.TokenAuthentication",
     ),
-    "DEFAULT_THROTTLE_RATES": {"user": "10/minute"},
+    "DEFAULT_THROTTLE_RATES": {"user": "100/minute"},
+    "DEFAULT_PAGINATION_CLASS": "library_api.pagination.NoCountPagination",
+    "PAGE_SIZE": 20,
 }
 
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -148,3 +154,8 @@ LOGOUT_REDIRECT_URL = "home"
 LOGIN_REDIRECT_URL = "home"
 
 AUTH_USER_MODEL = "library_api.User"
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]

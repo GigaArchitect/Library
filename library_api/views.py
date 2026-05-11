@@ -1,10 +1,14 @@
+from datetime import timedelta
+
 from django.db import DatabaseError, transaction
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
+from django.utils.timezone import now
 from knox.views import IsAuthenticated
 from knox.models import AuthToken
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.request import Request
@@ -112,6 +116,8 @@ class ListBook(ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ["name", "isbn", "category__name", "authors__user__first_name", "authors__user__last_name"]
 
 class CreateBook(CreateAPIView):
     permission_classes = [IsAuthenticated, IsAuthor]
@@ -179,6 +185,11 @@ def BorrowBook(request, pk):
             to_borrow.stock_copies -= 1
             to_borrow.borrowed_by.add(profile)
             to_borrow.save()
+            BorrowRecord.objects.create(
+                book=to_borrow,
+                patron=profile,
+                due_date=now().date() + timedelta(days=14),
+            )
         return Response("Added to your List !", status=status.HTTP_200_OK)
     except DatabaseError:
         return Response("Internal Database Error!", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -206,6 +217,9 @@ def ReturnBook(request, pk):
             to_return.stock_copies += 1
             to_return.borrowed_by.remove(profile)
             to_return.save()
+            BorrowRecord.objects.filter(
+                book=to_return, patron=profile, returned_at__isnull=True
+            ).update(returned_at=now())
 
         return Response("Removed from your List !", status=status.HTTP_200_OK)
     except DatabaseError:

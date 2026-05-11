@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
@@ -80,7 +82,7 @@ def create_author_profile(sender, instance, created, **kwargs):
     if created and instance.role == User.Role.AUTHOR:
         AuthorProfile.objects.create(user=instance)
     else:
-        AuthorProfile.objects.get(user=instance).delete
+        AuthorProfile.objects.get(user=instance).delete()
 
 
 class Patron(User):
@@ -111,3 +113,15 @@ class Book(models.Model):
     category = models.ManyToManyField(Category)
     stock_copies = models.IntegerField()
     borrowed_by = models.ManyToManyField(PatronProfile, related_name="borrowed_books")
+
+
+class BorrowRecord(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="borrow_records")
+    patron = models.ForeignKey(PatronProfile, on_delete=models.CASCADE, related_name="borrow_records")
+    borrowed_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField()
+    returned_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_overdue(self):
+        return self.returned_at is None and self.due_date < date.today()
