@@ -11,6 +11,9 @@ class Category(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     name = models.CharField(max_length=25)
 
+    class Meta:
+        ordering = ["name"]
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, password=None, **extra_fields):
@@ -77,12 +80,14 @@ class AuthorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
 
-@receiver([post_save, pre_delete], sender=Author)
-def create_author_profile(sender, instance, created, **kwargs):
-    if created and instance.role == User.Role.AUTHOR:
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if not created:
+        return
+    if instance.role == User.Role.AUTHOR:
         AuthorProfile.objects.create(user=instance)
-    else:
-        AuthorProfile.objects.get(user=instance).delete()
+    elif instance.role == User.Role.PATRON:
+        PatronProfile.objects.create(user=instance)
 
 
 class Patron(User):
@@ -97,14 +102,6 @@ class PatronProfile(models.Model):
     favourite_category = models.ManyToManyField(Category)
 
 
-@receiver([post_save, pre_delete], sender=Patron)
-def create_patron_profile(sender, instance, created, **kwargs):
-    if created and instance.role == User.Role.PATRON:
-        PatronProfile.objects.create(user=instance)
-    else:
-        PatronProfile.objects.get(user=instance).delete()
-
-
 class Book(models.Model):
     authors = models.ManyToManyField(AuthorProfile)
     isbn = models.CharField(max_length=150, primary_key=True, unique=True)
@@ -113,6 +110,9 @@ class Book(models.Model):
     category = models.ManyToManyField(Category)
     stock_copies = models.IntegerField()
     borrowed_by = models.ManyToManyField(PatronProfile, related_name="borrowed_books")
+
+    class Meta:
+        ordering = ["name"]
 
 
 class BorrowRecord(models.Model):

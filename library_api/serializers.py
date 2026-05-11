@@ -1,9 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import PermissionDenied
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 
-from .models import PatronProfile, User, Category, Book
+from .models import AuthorProfile, PatronProfile, User, Category, Book
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -65,12 +65,19 @@ class PatronProfileSerializer(serializers.ModelSerializer):
         return instance
 
 class BookSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), many=True, required=False
+    )
+    borrowed_by = serializers.PrimaryKeyRelatedField(
+        queryset=PatronProfile.objects.all(), many=True, required=False
+    )
+
     class Meta:
         model = Book
         fields = "__all__"
 
     def update(self, instance:Book, validated_data):
         request :Request = self.context.get('request')
-        if request.user not in instance.authors.all():
+        if not instance.authors.filter(user=request.user).exists():
             raise PermissionDenied("Authors Can Update Their Own Books Only !")
         return super().update(instance, validated_data)

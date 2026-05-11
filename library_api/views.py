@@ -8,6 +8,7 @@ from knox.views import IsAuthenticated
 from knox.models import AuthToken
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -118,6 +119,7 @@ class ListBook(ListAPIView):
     serializer_class = BookSerializer
     filter_backends = [SearchFilter]
     search_fields = ["name", "isbn", "category__name", "authors__user__first_name", "authors__user__last_name"]
+    ordering = ["name"]
 
 class CreateBook(CreateAPIView):
     permission_classes = [IsAuthenticated, IsAuthor]
@@ -134,9 +136,8 @@ class DeleteBook(DestroyAPIView):
     serializer_class = BookSerializer
 
     def perform_destroy(self, instance):
-        request = self.request
-        if request.user not in instance.authors.all():
-            raise PermissionError("Authors Can Only Delete Their Own Books !")
+        if not instance.authors.filter(user=self.request.user).exists():
+            raise PermissionDenied("Authors Can Only Delete Their Own Books !")
         return super().perform_destroy(instance)
 
 ###### Categories ######################################################
@@ -144,6 +145,7 @@ class ListCategory(ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    ordering = ["name"]
 
 class CreateCategory(CreateAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
